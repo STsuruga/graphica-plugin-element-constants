@@ -1,0 +1,9 @@
+# テスト実行に必要なもの。
+#
+# Graphica本体は PyPI に無いため、ソースを取得して editable install する
+# (README の「開発環境の準備」参照):
+#     pip install -e path/to/PlotterApp/Graphica_project
+#
+# 本体を入れなくても、データ検索の純粋なテストだけは実行できる
+# (配線・読み込み・zipのテストは skip される)。
+pytest==9.1.1
