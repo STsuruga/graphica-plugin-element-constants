@@ -2,10 +2,9 @@
 """
 元素・物理定数テーブルプラグイン(Graphica バックログ P-805)のテスト。
 
-データ検索ロジック(data.py)はGraphica本体にもGUIにも依存しないため直接
-テストする。register()の配線は core/plugin_testing.py の
-FakeGraphicaPluginAPI 経由で、実際の読み込みは PluginManager で検証する
-(いずれもGraphica本体が必要なので、未インストールなら skip される)。
+データ検索(data.py)は本体にも GUI にも依存しないので直接テストする。register() の配線は
+FakeGraphicaPluginAPI で、本番と同じ読み込み経路は load_plugin_like_graphica で確かめる
+(どちらも graphica.plugin.testing。本体が入っていなければ skip)。
 """
 import os
 import sys
@@ -23,18 +22,9 @@ from element_constants.data import (  # noqa: E402
 from conftest import requires_graphica, GRAPHICA_AVAILABLE  # noqa: E402
 
 if GRAPHICA_AVAILABLE:
-    import core.plugin_api as plugin_api_module
-    from core.plugin_api import PluginManager, GraphicaPluginAPI
-    from core.plugin_testing import FakeGraphicaPluginAPI, FakePluginContext
-
-
-@pytest.fixture(autouse=True)
-def _isolate_plugin_api_singleton():
-    """プラグインレジストリはプロセス全体で1つなので、テスト間で持ち越さない。"""
-    yield
-    if GRAPHICA_AVAILABLE:
-        plugin_api_module._singleton_api = None
-        plugin_api_module._singleton_manager = None
+    from graphica.plugin.testing import (
+        FakeGraphicaPluginAPI, FakePluginContext, install_zip_like_graphica, load_plugin_like_graphica,
+    )
 
 
 # --- data.py: find_element ---
@@ -137,35 +127,12 @@ def test_registered_widget_factory_returns_a_qwidget(qapp):
 # --- 本番と同じ読み込み経路のスモークテスト ---
 
 @requires_graphica
-def test_plugin_loads_through_the_real_plugin_manager(qapp, tmp_path):
-    """
-    plugin.json の api_version の誤りや、__init__.py 内の相対import
-    (from .data import ...)の解決失敗など、「本番と同じ読み込み経路」でしか
-    出ない不具合を検出する。
-
-    PluginManager はプラグインフォルダを含む *親* ディレクトリを見るため、
-    このリポジトリのルートをそのまま渡すのではなく、element_constants/ を
-    そのままコピーした一時ディレクトリを渡す(リポジトリルートには tests/ や
-    scripts/ もあり、それらをプラグイン候補として走査させないため)。
-    """
-    import shutil
-
+def test_plugin_loads_like_graphica(qapp, tmp_path):
+    """api_version の誤りや相対 import の失敗など、本番の読み込み経路でしか出ない不具合を捕まえる。"""
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    plugins_dir = tmp_path / "plugins"
-    plugins_dir.mkdir()
-    shutil.copytree(
-        os.path.join(repo_root, "element_constants"),
-        plugins_dir / "element_constants",
-        ignore=shutil.ignore_patterns("__pycache__"),
-    )
+    api, record = load_plugin_like_graphica(os.path.join(repo_root, "element_constants"), work_dir=str(tmp_path))
 
-    manager = PluginManager(str(plugins_dir))
-    api = GraphicaPluginAPI()
-    records = manager.load_all(api)
-
-    matching = [r for r in records if r["name"] == "element_constants"]
-    assert len(matching) == 1
-    assert matching[0]["error"] is None
+    assert record["error"] is None
     assert any(panel.name == "元素・物理定数テーブル" for panel in api.get_panels())
 
 
@@ -178,13 +145,12 @@ def test_built_zip_installs_through_the_real_installer(tmp_path):
     sys.path.insert(0, os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
     import build_zip
-    from core.plugin_install import install_plugin_zip
 
     zip_path = build_zip.build_plugin_zip("element_constants", out_dir=str(tmp_path / "out"))
 
     install_target = tmp_path / "installed"
     install_target.mkdir()
-    installed_name = install_plugin_zip(zip_path, target_dir=str(install_target))
+    installed_name = install_zip_like_graphica(zip_path, str(install_target))
 
     assert installed_name == "element_constants"
     assert (install_target / "element_constants" / "data.py").exists()

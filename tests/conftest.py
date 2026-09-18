@@ -2,7 +2,7 @@
 """
 テスト共通のフィクスチャ。
 
-Graphica本体(core.plugin_api / core.plugin_testing)は `pip install -e` で
+Graphica本体(graphica.plugin.testing)は `pip install -e` で
 入れておく必要がある。入っていない環境では、本体に依存しない純粋な
 データ検索のテストだけが走り、配線・読み込みのテストは skip される
 (README の「開発環境の準備」参照)。
@@ -20,8 +20,7 @@ except ImportError:  # pragma: no cover - PySide6が無い環境
 
 # Graphica本体が入っているか。テスト側は graphica_available で分岐する。
 try:
-    import core.plugin_api  # noqa: F401
-    import core.plugin_testing  # noqa: F401
+    import graphica.plugin.testing  # noqa: F401
     GRAPHICA_AVAILABLE = True
 except ImportError:
     GRAPHICA_AVAILABLE = False
