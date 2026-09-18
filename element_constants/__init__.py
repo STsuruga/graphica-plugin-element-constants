@@ -20,7 +20,8 @@ from .data import ELEMENT_COLUMNS, CONSTANT_COLUMNS, find_element, find_constant
 from .panel import ElementConstantsPanel
 
 
-def _create_panel(project, undo_stack):
+def _create_panel(ctx):
+    # データセットを使わない参照ツールなので、窓口(ctx)は使わない。
     return ElementConstantsPanel()
 
 

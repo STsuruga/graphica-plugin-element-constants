@@ -25,7 +25,7 @@ from conftest import requires_graphica, GRAPHICA_AVAILABLE  # noqa: E402
 if GRAPHICA_AVAILABLE:
     import core.plugin_api as plugin_api_module
     from core.plugin_api import PluginManager, GraphicaPluginAPI
-    from core.plugin_testing import FakeGraphicaPluginAPI
+    from core.plugin_testing import FakeGraphicaPluginAPI, FakePluginContext
 
 
 @pytest.fixture(autouse=True)
@@ -130,7 +130,7 @@ def test_registered_widget_factory_returns_a_qwidget(qapp):
     plugin.register(api)
 
     widget_factory = api.panels["元素・物理定数テーブル"]["widget_factory"]
-    widget = widget_factory(None, None)  # (project, undo_stack) — このパネルはどちらも使わない
+    widget = widget_factory(FakePluginContext())
     assert isinstance(widget, QWidget)
 
 

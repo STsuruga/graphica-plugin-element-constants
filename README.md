@@ -86,7 +86,7 @@ scripts/build_zip.py      ← 配布用zipのビルド
 
 ## API バージョン
 
-`plugin.json` の `api_version` は **`1.0`** です。Graphica 本体の
+`plugin.json` の `api_version` は **`2.0`** です。Graphica 本体の
 `core/plugin_manifest.py` の `PLUGIN_API_VERSION` と一致しないと、プラグインの
 コードは読み込まれません(本体側が破壊的変更を入れるとこの値が上がります)。
 
