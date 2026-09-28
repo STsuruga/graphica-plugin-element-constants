@@ -43,4 +43,6 @@ python scripts/generate_isotopes.py    # NIST から isotopes.py を作り直す
 - リリースしたら plugin.json の version とタグを揃え、ハブの db(collection "plugins", doc_id "P-805")を更新する。
 
 ## 現状
-- 2026-09-28: v1.2.0 を準備中(同位体・日本語名・一覧表示・コピーを追加、LICENSE / CLAUDE.md / CI を追加)。
+- 2026-09-28: v1.2.0 をリリース(https://github.com/STsuruga/graphica-plugin-element-constants/releases/tag/v1.2.0)。
+  仮想環境の graphica(PyPI 2.0.0)と v2.0.0 の exe の両方で、ユーザーが実機確認済み。CI(windows-latest)は 39 passed。
+- 次: 未定。候補は周期表のボタン型画面と追加物性(電子配置・電気陰性度など)。
