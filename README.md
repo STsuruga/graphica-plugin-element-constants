@@ -1,95 +1,85 @@
 # graphica-plugin-element-constants
 
 [Graphica](https://github.com/STsuruga/Graphica) 用のプラグイン。
-**元素周期表(118元素)と物理定数**を検索できる常設パネルを追加します。
-
-バックログ上の項目番号は **P-805**。データセットを一切必要としない参照ツールなので、
-`register_analyzer`(Dataset必須)ではなく `register_panel` で常設ドックパネルとして
-提供します。
+**元素周期表(118 元素)・同位体・物理定数**を検索できる常設パネルを追加します(Graphica のプラグイン項目 P-805)。
 
 ## できること
 
-- **元素の検索**: 元素記号(`Fe`)・原子番号(`26`)・英名(`Iron`、部分一致可)のいずれでも引ける
-- **物理定数の検索**: 日本語のよくある呼び名(`光速`、`プランク定数`)でも、
-  英語名の部分一致(`electron mass`)でも引ける
+パネル上部で「元素」「同位体」「物理定数」を切り替えて検索します。検索語が空のときは一覧を表示します。
 
-物理定数は `scipy.constants.physical_constants` をそのまま使っています(手入力による
-転記ミスが起きない)。元素データは、依存関係として承認できる既存パッケージに
-118元素を網羅したものが無かったため、このリポジトリに同梱しています。
+- **元素**: 元素記号(`Fe`)・原子番号(`26`)・英語名(`Iron`、部分一致可)・日本語名(`鉄`、部分一致可)で検索。
+  原子番号・元素記号・英語名・日本語名・原子量を表示します。行をダブルクリックすると、その元素の同位体を表示します。
+- **同位体**: 元素(`Fe`、`鉄`)ならその元素の同位体すべて、核種(`Fe-56`、`56Fe`、`鉄56`)ならその1件。
+  相対原子質量と天然存在比を、NIST の表記のまま(括弧内は末尾の桁の不確かさ)表示します。
+  天然に存在しない元素(Tc、Pm、Po 以降の多く)は、代表的な長寿命核種を存在比「—」で表示します。
+- **物理定数**: 日本語の呼び名(`光速`、`ボーア`、部分一致可)か英語名(`electron mass`)で、CODATA 値の全件から検索。
+  検索語が空のときは、よく使う 23 個の定数を表示します。
+
+表のセルを選んで **Ctrl+C**(または右クリック ▸ コピー)すると、タブ区切りのテキストとしてコピーでき、Excel などにそのまま貼り付けられます。
+
+### データの出典
+
+- 物理定数: `scipy.constants.physical_constants`(CODATA 推奨値)をそのまま使っています。
+- 同位体: NIST [Atomic Weights and Isotopic Compositions](https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl)
+  から `scripts/generate_isotopes.py` で生成しています。
+- 原子量: IUPAC 標準原子量(2021)の略値。安定同位体を持たない元素は最も安定な同位体の質量数です。
+  NIST の標準原子量と全元素で突き合わせ、同位体の存在比で重み付けした質量とも一致することをテストで確かめています。
 
 ## インストール(利用者向け)
 
 1. [Releases](https://github.com/STsuruga/graphica-plugin-element-constants/releases) から
    `element_constants-<version>.zip` をダウンロード
-2. Graphica を起動し、**環境設定 → 「プラグインをインストール...」** から
+2. Graphica(v2.0 以降)を起動し、**編集 ▸ 環境設定 ▸「プラグイン」タブ ▸ プラグインをインストール...** から
    その zip を選択
-3. Graphica を再起動すると、右側に「元素・物理定数テーブル」パネルが出ます
+3. Graphica を再起動し、「プラグイン」メニューから「元素・物理定数テーブル」パネルを表示
 
 > プラグインは `%LOCALAPPDATA%\Graphica\plugins` に展開されます。
-> このフォルダは Graphica を `Program Files` 配下にインストールしていても
-> 常に書き込み可能です。
+> Graphica を `Program Files` 配下にインストールしていても、このフォルダは常に書き込めます。
 
 ## 開発環境の準備
 
-このリポジトリ単体でもデータ検索のテストは動きますが、**register() の配線や
-本番と同じ読み込み経路のテストには Graphica 本体が必要**です。
+Python 3.11 以上で、リポジトリごとの仮想環境を作ります。
 
 ```bash
-# 1. Graphica 本体を editable install する
-#    (PyPI には無いので、ソースを取得してローカルパスを指定する)
-git clone https://github.com/STsuruga/Graphica.git
-pip install -e Graphica/Graphica_project
-
-# 2. テスト用の依存を入れる
+python -m venv .venv
+.venv\Scripts\activate                 # macOS / Linux は source .venv/bin/activate
+pip install "graphica-plot>=2.0,<3"     # PyPI の Graphica(プラグイン API 2.x)
 pip install -r requirements-dev.txt
-
-# 3. テスト実行
 pytest
 ```
 
-本体が入っていない場合、本体を必要とするテストは理由付きで skip されます
-(`tests/conftest.py` の `requires_graphica` を参照)。
+Graphica 本体が入っていない場合、本体を必要とするテストは理由付きで skip されます
+(`tests/conftest.py` の `requires_graphica`)。`graphica` コマンドで本体を起動できます。
 
 ## 配布用 zip のビルド
 
 ```bash
-python scripts/build_zip.py --all      # dist/element_constants-1.0.zip
+python scripts/build_zip.py --all      # dist/element_constants-<version>.zip
 ```
 
-`dist/` は `.gitignore` 済みです(zip はビルド成果物なので、リポジトリには
-コミットせず Releases に添付します)。
-
-出力する zip は、本体の `core/plugin_install.py` の `_find_plugin_root()` が
-受け付ける「単一のトップレベルフォルダの中に `__init__.py` がある」形です。
-`__pycache__` と `.pyc` は除外されます。
+zip はリポジトリにコミットせず、GitHub Releases に添付します。中身は Graphica のインストーラが受け付ける
+「単一のトップレベルフォルダ(`element_constants/`)」の形で、`__pycache__` と `.pyc` は含みません。
 
 ## このリポジトリの構成
 
 ```
-element_constants/        ← プラグイン本体(この *フォルダ名* がプラグイン名になる)
-  __init__.py             ← register(api) のエントリポイント
+element_constants/        ← プラグイン本体(このフォルダ名がインストール先のフォルダ名になる)
+  __init__.py             ← register(api)
   plugin.json             ← マニフェスト(name / version / api_version)
-  data.py                 ← 元素・定数データと検索ロジック(GUI非依存)
+  data.py                 ← 元素・同位体・定数の検索(GUI・本体に依存しない)
+  isotopes.py             ← 同位体データ(scripts/generate_isotopes.py が生成)
   panel.py                ← 検索パネルのウィジェット
 tests/                    ← pytest
-scripts/build_zip.py      ← 配布用zipのビルド
+scripts/build_zip.py      ← 配布用 zip のビルド
+scripts/generate_isotopes.py ← NIST のデータから isotopes.py を作り直す
 ```
 
-## 他のプラグインから再利用する場合
+## 他のプラグインから使う場合
 
-`data.py` は GUI にも Graphica 本体にも依存しない素の Python モジュールなので、
-他のプラグインからも再利用できます(バックログ上「他パックの共通基盤」という
-位置づけ)。ただし **プラグインは互いを import できません** — Graphica の
-`PluginManager` は各プラグインを `graphica_plugin_<name>` という動的モジュール名で
-読み込むため、`element_constants.data` という絶対パスは本番環境では解決しません。
-再利用したい場合は `data.py` をコピーして同梱してください。
-
-## API バージョン
-
-`plugin.json` の `api_version` は **`2.0`** です。Graphica 本体の
-`core/plugin_manifest.py` の `PLUGIN_API_VERSION` と一致しないと、プラグインの
-コードは読み込まれません(本体側が破壊的変更を入れるとこの値が上がります)。
+`data.py` と `isotopes.py` は GUI にも Graphica 本体にも依存しない素の Python モジュールです。
+ただし Graphica のプラグインは互いを import できない(各プラグインは `graphica_plugin_<フォルダ名>` という
+動的なモジュール名で読み込まれる)ので、使いたいプラグインにこの2ファイルをコピーして同梱してください。
 
 ## ライセンス
 
-Graphica 本体に準じます。
+MIT([LICENSE](LICENSE))。同位体データの出典である NIST のデータは米国政府の著作物です。

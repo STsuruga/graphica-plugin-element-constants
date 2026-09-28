@@ -18,7 +18,7 @@
     保ったまま固めるこの形が最も素直。
 
 使い方:
-    python scripts/build_zip.py --all          # dist/element_constants-1.0.zip
+    python scripts/build_zip.py --all          # dist/element_constants-<version>.zip
     python scripts/build_zip.py element_constants
 """
 import argparse

@@ -1,11 +1,8 @@
 # tests/conftest.py
-"""
-テスト共通のフィクスチャ。
+"""テスト共通のフィクスチャ。
 
-Graphica本体(graphica.plugin.testing)は `pip install -e` で
-入れておく必要がある。入っていない環境では、本体に依存しない純粋な
-データ検索のテストだけが走り、配線・読み込みのテストは skip される
-(README の「開発環境の準備」参照)。
+Graphica 本体(pip install "graphica-plot>=2.0,<3")が無い環境では、本体に依存しない
+データ検索のテストだけが走り、配線・読み込みのテストは skip される。
 """
 import os
 
@@ -18,7 +15,6 @@ try:
 except ImportError:  # pragma: no cover - PySide6が無い環境
     QApplication = None
 
-# Graphica本体が入っているか。テスト側は graphica_available で分岐する。
 try:
     import graphica.plugin.testing  # noqa: F401
     GRAPHICA_AVAILABLE = True
@@ -28,16 +24,13 @@ except ImportError:
 
 requires_graphica = pytest.mark.skipif(
     not GRAPHICA_AVAILABLE,
-    reason="Graphica本体が未インストールです(pip install -e <Graphica_project>)",
+    reason="Graphica 本体が未インストールです(pip install \"graphica-plot>=2.0,<3\")",
 )
 
 
 @pytest.fixture(scope="session", autouse=True)
 def qapp():
-    """
-    Graphica本体と同じく、セッション全体で1つだけQApplicationを用意する
-    (パネルのQWidgetを生成するテストに必要)。
-    """
+    """Graphica 本体と同じく、セッション全体で QApplication を1つだけ用意する。"""
     if QApplication is None:
         yield None
         return
